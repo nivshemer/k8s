@@ -1,0 +1,570 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: device-key-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: device-key-store
+  template:
+    metadata:
+      labels:
+        app: device-key-store
+    spec:
+      containers:
+        - name: device-key-store
+          image: gcr.io/macro-kiln-247514/device-key-store:${DEVICE_KEY_STORE_TAG}
+          envFrom:
+            - configMapRef:
+                name: configuration-env
+          ports:
+            - containerPort: 8092
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8092
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: device-key-store-json
+              mountPath: /app/appsettings.json
+            - name: dotnet-stores
+              mountPath: /root/.dotnet/corefx/cryptography/x509stores/
+      volumes:
+        - name: device-key-store-json
+          hostPath:
+            path: /noluck/service-configurations/device-key-store.json
+            type: File
+        - name: dotnet-stores
+          hostPath:
+            path: /noluck/stores/
+            type: Directory
+      imagePullSecrets:  # Corrected section
+        - name: gcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: device-key-store
+spec:
+  selector:
+    app: device-key-store
+  ports:
+    - protocol: TCP
+      port: 8092
+      targetPort: 8092
+  type: NodePort
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guid-generation
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guid-generation
+  template:
+    metadata:
+      labels:
+        app: guid-generation
+    spec:
+      containers:
+        - name: guid-generation
+          image: gcr.io/macro-kiln-247514/guid-generation-service:${GUID_GENERATION_TAG}
+          envFrom:
+            - configMapRef:
+                name: configuration-env
+          ports:
+            - containerPort: 8094
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8094
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 15
+            failureThreshold: 3
+          volumeMounts:
+            - name: guid-generation-json
+              mountPath: /app/appsettings.json
+            - name: dotnet-stores
+              mountPath: /root/.dotnet/corefx/cryptography/x509stores/
+      volumes:
+        - name: guid-generation-json
+          hostPath:
+            path: /noluck/service-configurations/guid-generation.json
+            type: File
+        - name: dotnet-stores
+          hostPath:
+            path: /noluck/stores/
+            type: Directory
+      imagePullSecrets:  # Corrected section
+        - name: gcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: guid-generation
+spec:
+  selector:
+    app: guid-generation
+  ports:
+    - protocol: TCP
+      port: 8094
+      targetPort: 8094
+  type: NodePort
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: management-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: management-api
+  template:
+    metadata:
+      labels:
+        app: management-api
+    spec:
+      containers:
+        - name: management-api
+          image: gcr.io/macro-kiln-247514/management-api:${MANAGEMENT_API_TAG}
+          envFrom:
+            - configMapRef:
+                name: configuration-env
+          ports:
+            - containerPort: 8070
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8070
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: management-api-json
+              mountPath: /app/appsettings.json
+            # - name: factorytalkusers-json
+            #   mountPath: /app/factorytalkusers.json
+            - name: dotnet-stores
+              mountPath: /root/.dotnet/corefx/cryptography/x509stores/
+      volumes:
+        - name: management-api-json
+          hostPath:
+            path: /noluck/service-configurations/management-api.json
+            type: File
+        # - name: factorytalkusers-json
+        #   hostPath:
+        #     path: /noluck/service-configurations/factorytalkusers.json
+        #     type: File
+        - name: dotnet-stores
+          hostPath:
+            path: /noluck/stores/
+            type: Directory
+      imagePullSecrets:  # Corrected section
+        - name: gcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: management-api
+spec:
+  selector:
+    app: management-api
+  ports:
+    - protocol: TCP
+      port: 8070
+      targetPort: 8070
+  type: NodePort
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ota
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ota
+  template:
+    metadata:
+      labels:
+        app: ota
+    spec:
+      containers:
+        - name: ota
+          image: gcr.io/macro-kiln-247514/ota-service:${OTA_TAG}
+          envFrom:
+            - configMapRef:
+                name: configuration-env
+          ports:
+            - containerPort: 8073
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8073
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: ota-json
+              mountPath: /app/appsettings.json
+            - name: dotnet-stores
+              mountPath: /root/.dotnet/corefx/cryptography/x509stores/
+      volumes:
+        - name: ota-json
+          hostPath:
+            path: /noluck/service-configurations/ota.json
+            type: File
+        - name: dotnet-stores
+          hostPath:
+            path: /noluck/stores/
+            type: Directory
+      imagePullSecrets:  # Corrected section
+        - name: gcr-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ota
+spec:
+  selector:
+    app: ota
+  ports:
+    - protocol: TCP
+      port: 8073
+      targetPort: 8073
+  type: NodePort
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: storage
+  template:
+    metadata:
+      labels:
+        app: storage
+    spec:
+      containers:
+        - name: storage
+          image: gcr.io/macro-kiln-247514/storage-service:${STORAGE_TAG}
+          envFrom:
+            - configMapRef:
+                name: configuration-env
+          env:
+            - name: PATH
+              value: /usr/share/dotnet
+          ports:
+            - containerPort: 8077
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8077
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 15
+            failureThreshold: 3
+          volumeMounts:
+            - name: storage-json
+              mountPath: /app/appsettings.json
+            - name: dotnet-stores
+              mountPath: /root/.dotnet/corefx/cryptography/x509stores/
+      volumes:
+        - name: storage-json
+          hostPath:
+            path: /noluck/service-configurations/storage.json
+            type: File
+        - name: dotnet-stores
+          hostPath:
+            path: /noluck/stores/
+            type: Directory
+      imagePullSecrets:  # Corrected section
+        - name: gcr-secret      
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: storage
+spec:
+  selector:
+    app: storage
+  ports:
+    - protocol: TCP
+      port: 8077
+      targetPort: 8077
+  type: NodePort
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: assets
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: assets
+  template:
+    metadata:
+      labels:
+        app: assets
+    spec:
+      containers:
+        - name: assets
+          image: gcr.io/macro-kiln-247514/assets-service:${ASSETS_TAG}
+          envFrom:
+            - configMapRef:
+                name: configuration-env
+          ports:
+            - containerPort: 8071
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8071
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: assets-json
+              mountPath: /app/appsettings.json
+            - name: assets-files
+              mountPath: /app/files
+            - name: failsafe-backups
+              mountPath: /app/failsafe_backups
+            - name: dotnet-stores
+              mountPath: /root/.dotnet/corefx/cryptography/x509stores/
+      volumes:
+        - name: assets-json
+          hostPath:
+            path: /noluck/service-configurations/assets.json
+            type: File
+        - name: assets-files
+          hostPath:
+            path: /noluck/assets/files
+            type: Directory
+        - name: failsafe-backups
+          hostPath:
+            path: /noluck/assets/failsafe
+            type: Directory
+        - name: dotnet-stores
+          hostPath:
+            path: /noluck/stores/
+            type: Directory
+      imagePullSecrets:  # Corrected section
+        - name: gcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: assets
+spec:
+  selector:
+    app: assets
+  ports:
+    - protocol: TCP
+      port: 8071
+      targetPort: 8071
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: datareadyprocessor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: datareadyprocessor
+  template:
+    metadata:
+      labels:
+        app: datareadyprocessor
+    spec:
+      containers:
+        - name: datareadyprocessor
+          image: gcr.io/macro-kiln-247514/data-ready-processor:${DATA_READY_PROCESSOR_TAG}
+          envFrom:
+            - configMapRef:
+                name: configuration-env
+          ports:
+            - containerPort: 8076
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8076
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: datareadyprocessor-json
+              mountPath: /app/appsettings.json
+            - name: dotnet-stores
+              mountPath: /root/.dotnet/corefx/cryptography/x509stores/
+      volumes:
+        - name: datareadyprocessor-json
+          hostPath:
+            path: /noluck/service-configurations/datareadyprocessor.json
+            type: File
+        - name: dotnet-stores
+          hostPath:
+            path: /noluck/stores/
+            type: Directory
+      imagePullSecrets:  # Corrected section
+        - name: gcr-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: datareadyprocessor
+spec:
+  selector:
+    app: datareadyprocessor
+  ports:
+    - protocol: TCP
+      port: 8076
+      targetPort: 8076
+  type: NodePort
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mngtclient
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mngtclient
+  template:
+    metadata:
+      labels:
+        app: mngtclient
+    spec:
+      containers:
+        - name: mngtclient
+          image: gcr.io/macro-kiln-247514/mngtclient:${MNGT_TAG}
+          env:
+            - name: API_URL
+              value: https://envvar-api.nolucksecurity.nl/api/
+            - name: BUILD_NUMBER
+              value: "BUILD_TAG"
+          envFrom:
+            - configMapRef:
+                name: configuration-env
+          ports:
+            - containerPort: 4201
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 4201
+            initialDelaySeconds: 120
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 3
+          volumeMounts:
+            - name: mngtclient-logo
+              mountPath: /app/src/assets/images/logo
+      volumes:
+        - name: mngtclient-logo
+          hostPath:
+            path: /noluck/images/logo
+            type: Directory
+      imagePullSecrets:  # Corrected section
+        - name: gcr-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mngtclient
+spec:
+  selector:
+    app: mngtclient
+  ports:
+    - protocol: TCP
+      port: 4201
+      targetPort: 4201
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notifications
+  template:
+    metadata:
+      labels:
+        app: notifications
+    spec:
+      containers:
+        - name: notifications
+          image: gcr.io/macro-kiln-247514/notifications-service:${NOTIFICATIONS_TAG}
+          envFrom:
+            - configMapRef:
+                name: configuration-env
+          ports:
+            - containerPort: 8095
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8095
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 15
+            failureThreshold: 3
+          volumeMounts:
+            - name: notifications-json
+              mountPath: /app/appsettings.json
+            - name: dotnet-stores
+              mountPath: /root/.dotnet/corefx/cryptography/x509stores/
+      volumes:
+        - name: dotnet-stores
+          hostPath:
+            path: /noluck/stores/
+            type: Directory
+        - name: notifications-json
+          hostPath:
+            path: /noluck/service-configurations/notifications.json
+            type: File
+      imagePullSecrets:  # Corrected section
+        - name: gcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: notifications
+spec:
+  selector:
+    app: notifications
+  ports:
+    - protocol: TCP
+      port: 8095
+      targetPort: 8095
+  type: NodePort

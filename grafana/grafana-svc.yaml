@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    meta.helm.sh/release-name: stable
+    meta.helm.sh/release-namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: stable
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/version: 10.2.2
+    helm.sh/chart: grafana-7.0.17
+  name: stable-grafana-ext
+  namespace: monitoring
+spec:
+  ports:
+  - name: http-web
+    port: 3000
+    protocol: TCP
+    targetPort: 3000
+    nodePort: 31499
+  selector:
+    app.kubernetes.io/instance: stable
+    app.kubernetes.io/name: grafana
+  sessionAffinity: None
+  type: NodePort
+
+

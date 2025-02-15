@@ -1,0 +1,1 @@
+create user nano_replicator with replication login encrypted password 'nolucksec';

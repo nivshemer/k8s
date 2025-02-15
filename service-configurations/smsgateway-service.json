@@ -1,0 +1,17 @@
+{
+    "Logging": {
+      "LogLevel": {
+        "Default": "Information",
+        "Microsoft.AspNetCore": "Warning"
+      }
+    },
+    "AllowedHosts": "*",
+    "PortName": "/dev/ttyUSB2",
+    "BaudRate": "115200",
+    "EndOfLine": "\r",
+    "TimeDelay": "50",
+    "HuaweiUserName": "admin",
+    "HuaweiPassword": "admin",
+    "Huawei5576Password": "meiRA9nD"
+  }
+  

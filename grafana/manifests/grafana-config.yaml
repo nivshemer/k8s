@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    app.kubernetes.io/component: grafana
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/part-of: kube-prometheus
+    app.kubernetes.io/version: 10.2.2
+  name: grafana-config
+  namespace: monitoring
+stringData:
+  grafana.ini: |
+    [date_formats]
+    default_timezone = UTC
+    [paths]
+    provisioning= provisioning
+    [dashboards]
+    default_home_dashboard_path= /grafana-dashboard-definitions/0/k8s-resources-pod-state/k8s-resources-pod-state.json
+    [auth.anonymous]
+    enabled= false
+    org_role= Admin
+    [users]
+    auto_assign_org_role = Viewer
+    auto_assign_org = true
+    auto_assign_org_id = 1
+    [auth]
+    login_maximum_inactive_lifetime_duration = 25m
+    login_maximum_lifetime_duration = 1d
+    [security]
+    admin_user = nolucksec
+    admin_password = noluckSec!
+    [server]
+    root_url = https://k8s.nolucksecurity.nl/monitoring/
+    serve_from_sub_path = true
+    [snapshots]
+    enabled=false
+    external_enabled=false
+    [unified_alerting]
+    enabled=false
+    [alerting]
+    enabled=false
+type: Opaque

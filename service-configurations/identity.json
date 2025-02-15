@@ -1,0 +1,24 @@
+{
+	"AllowedHosts": "*",
+	"IssuerUri": "https://dev-30-auth.nolucksecurity.nl/auth/realms$NOLUCKsec/",
+	"Jwt": {
+		"Issuer": "nolucksecurity.nl",
+		"RefreshTokenValidityInMinutes": "640",
+		"TokenValidityInMinutes": "5"
+	},
+	"Logging": {
+		"LogLevel": {
+			"Default": "Information",
+			"Microsoft": "Warning",
+			"System": "Warning"
+		}
+	},
+	"MultiFactorSmsSettings": {
+		"SmsResendPolicy": 3,
+		"SmsTimeOutPolicyInSeconds": 180,
+		"SmsWrongCodePolicy": 5
+	},
+	"NotificationsUrl": "http://notifications:8095",
+	"OTDUrl": "http://otd-service:8070",
+	"GroupsAndPoliciesUrl": "http://groupsandpolicies:8096"
+}

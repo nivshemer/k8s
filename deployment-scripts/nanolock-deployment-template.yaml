@@ -1,0 +1,538 @@
+# 1. Assets Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: assets
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: assets
+  template:
+    metadata:
+      labels:
+        app: assets
+    spec:
+      containers:
+      - name: assets
+        image: europe-west1-docker.pkg.dev/macro-kiln-247514/images/assets-service:${ASSETS_TAG}
+        ports:
+        - containerPort: 8071
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8071
+          periodSeconds: 600
+          timeoutSeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8071
+          initialDelaySeconds: 30
+          periodSeconds: 600
+          timeoutSeconds: 60
+        envFrom:
+        - configMapRef:
+            name: deployment-configuration
+        - secretRef:
+            name: deployment-secrets
+        volumeMounts:
+        - name: config-assets
+          mountPath: /app/appsettings.json
+          subPath: assets.json
+        - name: assets-files
+          mountPath: /app/files
+        - name: assets-failsafe
+          mountPath: /app/failsafe_backups
+        - name: stores
+          mountPath: /root/.dotnet/corefx/cryptography/x509stores
+      volumes:
+      - name: config-assets
+        hostPath:
+          path: /noluck/service-configurations/assets.json
+          type: File
+      - name: assets-files
+        hostPath:
+          path: /noluck/assets/files
+          type: Directory
+      - name: assets-failsafe
+        hostPath:
+          path: /noluck/assets/failsafe
+          type: Directory
+      - name: stores
+        hostPath:
+          path: /noluck/stores
+          type: Directory
+---
+# 1. Assets Service Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: assets
+spec:
+  selector:
+    app: assets
+  ports:
+  - protocol: TCP
+    port: 8071
+    targetPort: 8071
+---
+# 2. Notifications Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notifications
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notifications
+  template:
+    metadata:
+      labels:
+        app: notifications
+    spec:
+      containers:
+      - name: notifications
+        image: europe-west1-docker.pkg.dev/macro-kiln-247514/images/notifications-service:${NOTIFICATIONS_TAG}
+        command: ["sh", "-c", "update-ca-certificates"]
+        ports:
+        - containerPort: 8095
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8095
+          periodSeconds: 600
+          timeoutSeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8095
+          initialDelaySeconds: 30
+          periodSeconds: 600
+          timeoutSeconds: 60
+        envFrom:
+        - configMapRef:
+            name: deployment-configuration
+        - secretRef:
+            name: deployment-secrets
+        volumeMounts:
+        - name: stores
+          mountPath: /root/.dotnet/corefx/cryptography/x509stores
+        - name: config-notifications
+          mountPath: /app/appsettings.json
+          subPath: notifications.json
+        - name: nginx-cert
+          mountPath: /etc/ssl/certs/cert.crt
+          subPath: cert.crt
+      volumes:
+      - name: stores
+        hostPath:
+          path: /noluck/stores
+          type: Directory
+      - name: config-notifications
+        hostPath:
+          path: /noluck/service-configurations/notifications.json
+          type: File
+      - name: nginx-cert
+        hostPath:
+          path: /noluck/nginx/cert.crt
+          type: File
+---
+# 2. Notifications Service Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: notifications
+spec:
+  selector:
+    app: notifications
+  ports:
+  - protocol: TCP
+    port: 8095
+    targetPort: 8095
+---
+# 3. Groupsandpolicies Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: groupsandpolicies
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: groupsandpolicies
+  template:
+    metadata:
+      labels:
+        app: groupsandpolicies
+    spec:
+      containers:
+      - name: groupsandpolicies
+        image: europe-west1-docker.pkg.dev/macro-kiln-247514/images/groupsandpolicies-service:${GROUPSANDPOLICIES_TAG}
+        ports:
+        - containerPort: 8096
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8096
+          periodSeconds: 600
+          timeoutSeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8096
+          initialDelaySeconds: 30
+          periodSeconds: 600
+          timeoutSeconds: 60
+        envFrom:
+        - configMapRef:
+            name: deployment-configuration
+        - secretRef:
+            name: deployment-secrets
+        volumeMounts:
+        - name: stores
+          mountPath: /root/.dotnet/corefx/cryptography/x509stores
+        - name: config-groupsandpolicies
+          mountPath: /app/appsettings.json
+          subPath: groups-and-policies.json
+      volumes:
+      - name: stores
+        hostPath:
+          path: /noluck/stores
+          type: Directory
+      - name: config-groupsandpolicies
+        hostPath:
+          path: /noluck/service-configurations/groups-and-policies.json
+          type: File
+---
+# 3. Groupsandpolicies Service Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: groupsandpolicies
+spec:
+  selector:
+    app: groupsandpolicies
+  ports:
+  - protocol: TCP
+    port: 8096
+    targetPort: 8096
+---
+# 4. Identity Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: identity
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: identity
+  template:
+    metadata:
+      labels:
+        app: identity
+    spec:
+      containers:
+      - name: identity
+        image: europe-west1-docker.pkg.dev/macro-kiln-247514/images/identity-service:${IDENTITY_TAG}
+        ports:
+        - containerPort: 8097
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8097
+          periodSeconds: 600
+          timeoutSeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8097
+          initialDelaySeconds: 30
+          periodSeconds: 600
+          timeoutSeconds: 60
+        envFrom:
+        - configMapRef:
+            name: deployment-configuration
+        - secretRef:
+            name: deployment-secrets
+        volumeMounts:
+        - name: stores
+          mountPath: /root/.dotnet/corefx/cryptography/x509stores
+        - name: config-identity
+          mountPath: /app/appsettings.json
+          subPath: identity.json
+      volumes:
+      - name: stores
+        hostPath:
+          path: /noluck/stores
+          type: Directory
+      - name: config-identity
+        hostPath:
+          path: /noluck/service-configurations/identity.json
+          type: File
+---
+# 4. Identity Service Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity
+spec:
+  selector:
+    app: identity
+  ports:
+  - protocol: TCP
+    port: 8097
+    targetPort: 8097
+---
+# 5. Device-Key-Store Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: device-key-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: device-key-store
+  template:
+    metadata:
+      labels:
+        app: device-key-store
+    spec:
+      containers:
+      - name: device-key-store
+        image: europe-west1-docker.pkg.dev/macro-kiln-247514/images/device-key-store:${DEVICE_KEY_STORE_TAG}
+        ports:
+        - containerPort: 8092
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8092
+          periodSeconds: 600
+          timeoutSeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8092
+          initialDelaySeconds: 30
+          periodSeconds: 600
+          timeoutSeconds: 60
+        envFrom:
+        - configMapRef:
+            name: deployment-configuration
+        - secretRef:
+            name: deployment-secrets
+        volumeMounts:
+        - name: config-device-key-store
+          mountPath: /app/appsettings.json
+          subPath: device-key-store.json
+        - name: stores
+          mountPath: /root/.dotnet/corefx/cryptography/x509stores
+      volumes:
+      - name: config-device-key-store
+        hostPath:
+          path: /noluck/service-configurations/device-key-store.json
+          type: File
+      - name: stores
+        hostPath:
+          path: /noluck/stores
+          type: Directory
+---
+# 5. Device-Key-Store Service Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: device-key-store
+spec:
+  selector:
+    app: device-key-store
+  ports:
+  - protocol: TCP
+    port: 8092
+    targetPort: 8092
+---
+# 6. OTD Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otd-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otd-service
+  template:
+    metadata:
+      labels:
+        app: otd-service
+    spec:
+      containers:
+      - name: otd-service
+        image: europe-west1-docker.pkg.dev/macro-kiln-247514/images/otd-service:${OTD_TAG}
+        command: ["sh", "-c", "update-ca-certificates"]
+        ports:
+        - containerPort: 8070
+        env:
+        - name: DUMMY_DATA
+          value: "/dummy-data"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8070
+          periodSeconds: 600
+          timeoutSeconds: 60
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8070
+          initialDelaySeconds: 30
+          periodSeconds: 600
+          timeoutSeconds: 60
+        envFrom:
+        - configMapRef:
+            name: deployment-configuration
+        - secretRef:
+            name: deployment-secrets
+        volumeMounts:
+        - name: config-otd
+          mountPath: /app/appsettings.json
+          subPath: otd.json
+        - name: stores
+          mountPath: /root/.dotnet/corefx/cryptography/x509stores
+        - name: nginx-cert
+          mountPath: /etc/ssl/certs/cert.crt
+          subPath: cert.crt
+        - name: dummy-data
+          mountPath: /dummy-data
+      volumes:
+      - name: config-otd
+        hostPath:
+          path: /noluck/service-configurations/otd.json
+          type: File
+      - name: stores
+        hostPath:
+          path: /noluck/stores
+          type: Directory
+      - name: nginx-cert
+        hostPath:
+          path: /noluck/nginx/cert.crt
+          type: File
+      - name: dummy-data
+        hostPath:
+          path: /noluck/dummy-data
+          type: Directory
+---
+# 6. OTD Service Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: otd-service
+spec:
+  selector:
+    app: otd-service
+  ports:
+  - protocol: TCP
+    port: 8070
+    targetPort: 8070
+---
+# 7. Mngtclient Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mngtclient
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mngtclient
+  template:
+    metadata:
+      labels:
+        app: mngtclient
+    spec:
+      containers:
+      - name: mngtclient
+        image: europe-west1-docker.pkg.dev/macro-kiln-247514/images/mngtclient:${MNGT_TAG}
+        ports:
+        - containerPort: 4201
+        envFrom:
+        - configMapRef:
+            name: mngtclient-env
+        volumeMounts:
+        - name: mngtclient-logo
+          mountPath: /app/src/assets/images/logo
+        - name: mngtclient-help
+          mountPath: /app/src/app/layout/common/user/entry/help/help.component.html
+          subPath: help.component.html
+      volumes:
+      - name: mngtclient-logo
+        hostPath:
+          path: ${noluck_HOME}/images/logo
+          type: Directory
+      - name: mngtclient-help
+        hostPath:
+          path: ${noluck_HOME}/support/help.component.html
+          type: File
+---
+# 7. Mngtclient Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: mngtclient
+spec:
+  type: NodePort
+  selector:
+    app: mngtclient
+  ports:
+  - protocol: TCP
+    port: 4201
+    targetPort: 4201
+---
+# 8. SMS-Gateway Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sms-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sms-gateway
+  template:
+    metadata:
+      labels:
+        app: sms-gateway
+    spec:
+      containers:
+      - name: sms-gateway
+        image: europe-west1-docker.pkg.dev/macro-kiln-247514/images/smsgateway-service:${SMS_TAG}
+        ports:
+        - containerPort: 3001
+        envFrom:
+        - configMapRef:
+            name: smsgateway-env
+        volumeMounts:
+        - name: config-sms-gateway
+          mountPath: /app/appsettings.json
+          subPath: smsgateway-service.json
+      volumes:
+      - name: config-sms-gateway
+        hostPath:
+          path: /noluck/service-configurations/smsgateway-service.json
+          type: File
+---
+# 8. SMS-Gateway Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: sms-gateway
+spec:
+  type: NodePort
+  selector:
+    app: sms-gateway
+  ports:
+  - protocol: TCP
+    port: 3001
+    targetPort: 3001

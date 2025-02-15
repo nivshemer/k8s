@@ -1,0 +1,1 @@
+{"ConfigurationServiceUrl": "http://configuration:8090/", "AlertsService": {"ServiceUrl": "http://localhost:8075"}, "CacheMessages": false, "MessageFailureDelay": "00:15:00", "DeviceAuthenticationServiceUrl": "http://device-authentication:8093/api", "DeviceOperationThrottling": {"MaxDegreeOfParallelism": 70}, "GuidMaximumCapacity": 100}

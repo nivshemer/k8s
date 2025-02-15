@@ -1,0 +1,23 @@
+<div class="relative flex flex-col w-full h-full" *transloco="let t">
+    <h1 class="text-center bg-primary text-white"> {{t('Toolbar.Help.Title')}}</h1>
+
+    <div mat-dialog-content class="content w-full">
+        <h2 class="text-xl font-semibold mb-2">{{t('Toolbar.Help.Text')}}</h2>
+
+        <p class="mb-1"></p>
+        <p class="mb-2">
+            <a
+                class="hover:underline text-primary-500"
+                [href]="'mailto:support@nolucksecurity.com'"
+                target="_blank">support&#64;nolucksecurity.com</a>
+        </p>
+    </div>
+
+    <!-- Content -->
+<!--    <div class="w-full">-->
+<!--        <div class="text-lg">{{t('Toolbar.Help.Text')}}</div>-->
+<!--        <div class="text-lg">800 180 2450 Ext. 122</div>-->
+<!--        <div class="text-lg">socot@indracompany.com</div>-->
+
+<!--    </div>-->
+</div>

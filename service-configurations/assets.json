@@ -1,0 +1,48 @@
+{
+	"Redis": {
+		"Ssl": false,
+		"Hosts": [
+			{
+				"Host": "redis",
+				"Port": 6379
+			}
+		],
+		"Database": 0,
+		"Password": "nolucksec",
+		"AbortOnConnectFail": false,
+		"ConfigurationOptions": {
+			"KeepAlive": 5000,
+			"SyncTimeout": 180000,
+			"AsyncTimeout": 180000,
+			"ConnectTimeout": 180000,
+			"ResponseTimeout": 180000
+		}
+	},
+	"Logging": {
+		"LogLevel": {
+			"System": "Warning",
+			"Default": "Information",
+			"Microsoft": "Warning"
+		}
+	},
+	"MemoryCache": {
+		"AbsoluteExpiration": "00:30:00"
+	},
+	"DistributedCache": {
+		"AbsoluteExpiration": "01:00:00"
+	},
+	"HealthCheckPublisher": {
+		"Delay": "00:00:30"
+	},
+	"AssetsRoot": ".\\files",
+	"LocalStorage": {
+		"RetryTimeout": 30,
+		"RetryAttempts": 3,
+		"DestinationPath": "/app/failsafe_backups"
+	},
+	"KeyStorageUrl": "http://device-key-store:8092",
+	"ExternalStorage": {
+		"RetryTimeout": 30,
+		"RetryAttempts": 3
+	}
+}

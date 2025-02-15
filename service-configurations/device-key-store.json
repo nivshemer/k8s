@@ -1,0 +1,48 @@
+{
+    "DistributedCache": {
+        "AbsoluteExpiration": "01:00:00"
+    },
+    "EncryptionKeys": {
+        "AutomaticKeyCreationAndRotation": true,
+        "KeyCreationAndRotationJobCronExpression": "0 0 0/12 * * ?",
+        "KeyCreationTriggerInHours": 48,
+        "KeyLifeSpanInDays": 90,
+        "keyRotaionTriggerInHours": 48
+    },
+    "HealthCheckPublisher": {
+        "Delay": "00:00:30"
+    },
+    "Logging": {
+        "LogLevel": {
+            "Default": "Information",
+            "Microsoft": "Warning",
+            "System": "Warning"
+        }
+    },
+    "MemoryCache": {
+        "AbsoluteExpiration": "00:30:00"
+    },
+    "Redis": {
+        "AbortOnConnectFail": false,
+        "ConfigurationOptions": {
+            "AsyncTimeout": 180000,
+            "ConnectTimeout": 180000,
+            "KeepAlive": 5000,
+            "ResponseTimeout": 180000,
+            "SyncTimeout": 180000
+        },
+        "Database": 0,
+        "Hosts": [
+            {
+                "Host": "redis",
+                "Port": 6379
+            }
+        ],
+        "Password": "nolucksec",
+        "Ssl": false
+    },
+    "TimeoutBatchBlock": {
+        "BatchExpirationMilliSeconds": 500,
+        "BatchSize": 10
+    }
+}

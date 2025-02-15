@@ -1,0 +1,26 @@
+{
+	"FirmwareUrl": "https://envvar-ota.nolucksecurity.nl",
+	"WebLocation": "http://assets:8071/",
+	"AuthorityUrl": "https://envvar-auth.nolucksecurity.nl/auth/realms$NOLUCKsec/",
+	"WebClient": {
+		"CustomerId": "noluck",
+		"Title": "nanolōck  - Edge Protection"
+	},
+	"Redis": {
+		"Url": "redis",
+		"Password": "nolucksec",
+		"Database": 0
+	},
+	"MemoryCache": {
+		"AbsoluteExpiration": "00:30:00"
+	},
+	"DistributedCache": {
+		"AbsoluteExpiration": "01:00:00"
+	},
+	"MQ": {
+		"Url": "rabbit-mq",
+		"Password": "nolucksec",
+		"UserName": "nolucksec",
+		"VirtualHost": "/"
+	}
+}

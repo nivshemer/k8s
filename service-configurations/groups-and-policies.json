@@ -1,0 +1,4 @@
+{
+  "OTDUrl": "http://otd-service:8070",
+  "IdentityUrl": "http://identity:8097"
+}

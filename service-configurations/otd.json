@@ -1,0 +1,73 @@
+{
+	"Redis": {
+		"Ssl": false,
+		"Hosts": [
+			{
+				"Host": "redis",
+				"Port": 6379
+			}
+		],
+		"Database": 0,
+		"Password": "nolucksec",
+		"AbortOnConnectFail": false,
+		"ConfigurationOptions": {
+			"KeepAlive": 5000,
+			"SyncTimeout": 180000,
+			"AsyncTimeout": 180000,
+			"ConnectTimeout": 180000,
+			"ResponseTimeout": 180000
+		}
+	},
+	"Logging": {
+		"LogLevel": {
+			"System": "Warning",
+			"Default": "Information",
+			"Microsoft": "Warning"
+		}
+	},
+	"MemoryCache": {
+		"AbsoluteExpiration": "00:30:00"
+	},
+	"DistributedCache": {
+		"AbsoluteExpiration": "01:00:00"
+	},
+	"HealthCheckPublisher": {
+		"Delay": "00:00:30"
+	},
+	"Assets": {
+		"WebLocation": "http://assets:8071/",
+		"ThumbnailSize": 300,
+		"PhysicalLocation": "C:\\inetpub\\wwwroot\\ManagementAssets\\"
+	},
+	"CrossOrigin": {
+		"AllowAll": false,
+		"AllowedMethod": [],
+		"AllowedHeaders": [],
+		"AllowedOrigins": [
+			"https://*.nolucksecurity.nl",
+			"http://<ip_address>:4201",
+			"http://localhost:4201"
+		],
+		"ExposedHeaders": [
+			"Content-Disposition"
+		],
+		"AllowAllHeaders": true,
+		"AllowAllMethods": true,
+		"AllowedAllOrigins": false,
+		"AllowedCredentials": true
+	},
+	"KeyStorageUrl": "http://device-key-store:8092",
+	"NotificationsUrl": "http://notifications:8095",
+	"GroupsAndPoliciesUrl": "http://groupsandpolicies:8096",
+	"IdentityUrl": "http://identity:8097",
+	"FeatureManagement": {
+		"ConfigurationIntegrity" : false,
+		"ViewerRole" : false
+	},
+	"MultiFactorAuthentication": {
+		"SmsResendPolicy": 3,
+		"SmsWrongCodePolicy": 5,
+		"SmsTimeOutPolicyInSeconds": 180,
+		"EnableMultiFactorAuthenticationForNewUsers": false
+	}
+}

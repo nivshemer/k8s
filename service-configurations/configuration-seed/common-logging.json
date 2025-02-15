@@ -1,0 +1,58 @@
+﻿{
+  "nlog": {
+    "rules": {
+      "logger": [
+        {
+          "@name": "*",
+          "@final": "true",
+          "@writeTo": "asyncwrapper",
+          "@minlevel": "Trace"
+        }
+      ]
+    },
+    "@xmlns": "http://www.nlog-project.org/schemas/NLog.xsd",
+    "targets": {
+      "target": [ 
+        {
+          "@name": "asyncwrapper",
+          "target": {
+            "@uri": "http://elasticsearch:9200",
+            "@name": "elasticsearch",
+            "field": [
+              { "@name": "application", "@layout": "${app-name}" },
+			  { "@name": "application-id", "@layout": "${app-id}" },
+              {
+                "@name": "machine-name",
+                "@layout": "${machinename}"
+              },
+              {
+                "@name": "local-ip",
+                "@layout": "${local-ip}"
+              }
+            ],
+            "@index": "logs-${date:format=yyyy.MM.dd}",
+            "@layout": "${message}",
+            "@xsi:type": "ElasticSearch",
+            "@requireAuth": "true",
+			      "@username":"nolucksec",
+            "@password":"noluckSec!",
+            "@documentType": "Layout",
+            "@includeAllProperties": "true"
+          },
+          "@xsi:type": "AsyncWrapperWithContext"        
+        }
+      ]
+    },
+    "@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
+    "extensions": {
+      "add": [
+        { "@assembly": "NLog.Web.AspNetCore" },
+        { "@assembly": "noluckSec.Core.Logging" },
+		{ "@assembly": "noluckSec.Core.Logging.ElasticSearch" }
+      ]
+    },
+    "@autoReload": "true",
+    "@internalLogFile": "logs/internal-nlog.txt",
+    "@internalLogLevel": "info"
+  }
+}

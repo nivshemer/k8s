@@ -1,0 +1,228 @@
+﻿{
+  "definitions": {
+    "logLevel": {
+      "type": "string",
+      "enum": [
+        "Trace",
+        "Debug",
+        "Information",
+        "Warning",
+        "Error",
+        "Critical",
+        "None"
+      ]
+    }
+  },
+  "type": "object",
+  "properties": {
+    "Logging": {
+      "type": "object",
+      "properties": {
+        "LogLevel": {
+          "type": "object",
+          "patternProperties": {
+            ".*": {"$ref": "#/definitions/logLevel"}
+          }
+        }
+      }
+    },
+    "Authentication": {
+      "description": "The identity authentication service settings.",
+      "type": "object",
+      "properties": {
+        "AuthorityUrl": {
+          "type": "string",
+          "description": "The identity authentication service url."
+        },
+        "ClientSecret": {
+          "type": "string",
+          "description": "The service secret."
+        },
+        "ClientId": {
+          "type": "string",
+          "description": "The service client id."
+        }
+      }
+    },
+    "Redis": {
+      "type": "object",
+      "description": "The Redis communication settings.",
+      "properties": {
+        "Hosts": {
+          "description": "The Redis servers endpoints.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "Host": {
+                "type": "string",
+                "description": "The Redis server host name or IP address."
+              },
+              "Port": {
+                "type": "number",
+                "description": "The Redis service port number."
+              }
+            }
+          }
+        },
+        "Database": {
+          "type": "number",
+          "description": "Specifies the database to use when connecting to the server."
+        },
+        "Password": {
+          "type": "string",
+          "description": "The password to use to authenticate with the server."
+        },
+        "ConfigurationOptions": {
+          "type": "object",
+          "properties": {
+            "ConnectTimeout": {
+              "type": "number",
+              "description": "Specifies the time in milliseconds that should be allowed for connection."
+            },
+            "SyncTimeout": {
+              "type": "number",
+              "description": "Specifies the time in milliseconds that the system should allow for synchronous operations."
+            },
+            "KeepAlive": {
+              "type": "number",
+              "description": "Specifies the time in seconds at which connections should be pinged to ensure validity."
+            },
+            "ResponseTimeout": {
+              "type": "number",
+              "description": "Specifies the time in milliseconds that the system should allow for responses before concluding that the socket is unhealthy."
+            },
+            "AsyncTimeout": {
+              "type": "number",
+              "description": "Specifies the time in milliseconds that the system should allow for asynchronous operations"
+            }
+          }
+        },
+        "AbortOnConnectFail": {
+          "type": "boolean",
+          "description": "Gets or sets whether connect/configuration timeouts should be explicitly notified."
+        },
+        "Ssl": {
+          "type": "boolean",
+          "description": "Indicates whether the connection should be encrypted."
+        }
+      }
+    },
+    "RabbitMQ": {
+      "description": "The RabbitMQ communication settings.",
+      "type": "object",
+      "properties": {
+        "Server": {
+          "type": "string",
+          "description": "The RabbitMQ server host name or IP address."
+        },
+        "Password": {
+          "type": "string",
+          "description": "The RabbitMQ server password."
+        },
+        "UserName": {
+          "type": "string",
+          "description": "The RabbitMQ user name."
+        },
+        "VirtualHost": {
+          "type": "string",
+          "description": "The RabbitMQ virtual server to use."
+        },
+        "BatchPublish": {
+          "type": "object",
+          "description": "The batch publish settings.",
+          "properties": {
+            "ConfirmTimeout": {
+              "type": "string",
+              "description": "The confirm timeout."
+            },
+            "BatchSize": {
+              "type": "number",
+              "description": "The size of the batch."
+            },
+            "BatchExpirationMilliseconds": {
+              "type": "number",
+              "description": "Gets or sets the batch expiration in milliseconds.\r\nThe time that indicates when to execute a batch even if it is less than <see cref=\"BatchSize\"/>."
+            }
+          }
+        }
+      }
+    },
+    "StorageUrl": {
+      "type": "string",
+      "description": "The Storage Service url."
+    },
+    "MemoryCache": {
+      "description": "The memory cache settings.",
+      "type": "object",
+      "properties": {
+        "SizeLimit": {
+          "type": "number",
+          "description": "The maximum number of objects in the cache."
+        },
+        "DefaultLockExpiry": {
+          "type": "string",
+          "description": "The default lock expiry time."
+        },
+        "SlidingExpiration": {
+          "type": "string",
+          "description": "The default sliding expiration time."
+        },
+        "AbsoluteExpiration": {
+          "type": "string",
+          "description": "The default absolute expiration time."
+        }
+      }
+    },
+    "DistributedCache": {
+      "description": "The distributed cache settings.",
+      "type": "object",
+      "properties": {
+        "DefaultLockExpiry": {
+          "type": "string",
+          "description": "The default lock expiry time."
+        },
+        "SlidingExpiration": {
+          "type": "string",
+          "description": "The default sliding expiration time."
+        },
+        "AbsoluteExpiration": {
+          "type": "string",
+          "description": "The default absolute expiration time."
+        }
+      }
+    },
+    "HealthCheckPublisher": {
+      "type": "object",
+      "description": "When this property exists the service will enable the health check publisher with the specified configuration.",
+      "properties": {
+        "Delay": {
+          "type": "string",
+          "description": "The time to wait before starting to sample.",
+          "default": "00:00:30"
+        },
+        "Period": {
+          "type": "string",
+          "description": "The time to wait between sampling cycles.",
+          "default": "00:00:30"
+        },
+        "Timeout": {
+          "type": "string",
+          "description": "The timeout waiting for all health checks to execute.",
+          "default": "00:00:30"
+        },
+        "Logging": {
+          "type": "object",
+          "description": "The configuration for the logging health check publisher.",
+          "properties": {
+            "LogLevel": {
+              "description": "The log level to publish the results at.",
+              "$ref": "#/definitions/logLevel",
+              "default":"Information"
+            }
+          }
+        }
+      }
+    }
+  }
+}

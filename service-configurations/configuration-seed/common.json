@@ -1,0 +1,47 @@
+﻿{
+	"Logging": {
+		"LogLevel": {
+			"Default": "Information",
+			"Microsoft": "Warning",
+			"System": "Warning"
+		}
+	},
+	"Redis": {
+		"Hosts": [
+			{
+				"Host": "mem3.nolucksecurity.nl",
+				"Port": 6379
+			}
+		],
+		"Database": 19,
+		"Password": "nolucksec",
+		"ConfigurationOptions": {
+			"ConnectTimeout": 180000,
+			"SyncTimeout": 180000,
+			"KeepAlive": 5000,
+			"ResponseTimeout": 180000,
+			"AsyncTimeout": 180000
+		},
+		"AbortOnConnectFail": false,
+		"Ssl": false
+	},
+	"RabbitMQ": {
+		"Server": "mem1.nolucksecurity.nl",
+		"Password": "nolucksec",
+		"UserName": "nolucksec",
+		"VirtualHost": "/dev/inbar"
+	},
+	"MemoryCache": {
+		"AbsoluteExpiration": "00:00:10"
+	},
+	"DistributedCache": {
+		"AbsoluteExpiration": "00:00:20"
+	},
+	"StorageUrl": "http://storage:8077/OData",
+	"Authentication": {
+		"AuthorityUrl": "http://localhost:8078"
+	},
+	"HealthCheckPublisher": {
+		"Delay": "00:00:30"
+	}
+}

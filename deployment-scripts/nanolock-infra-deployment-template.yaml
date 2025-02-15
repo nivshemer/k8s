@@ -1,0 +1,646 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: gcr.io/macro-kiln-247514/infra/nginx:${NGINX_TAG}
+          envFrom:
+            - configMapRef:
+                name: nginx-domain-names-env-vars
+          ports:
+            - containerPort: 80
+            - containerPort: 443
+            - containerPort: 8070
+            - containerPort: 8074
+            - containerPort: 8078
+            - containerPort: 8073
+            - containerPort: 9200
+            - containerPort: 5000
+            - containerPort: 5001
+          volumeMounts:
+            - name: nginx-config-volume
+              mountPath: /etc/nginx/nginx.conf
+              readOnly: true
+            - name: nginx-cert-volume
+              mountPath: /etc/nginx/cert.crt
+              readOnly: true
+            - name: nginx-key-volume
+              mountPath: /etc/nginx/cert.key
+              readOnly: true
+            - name: nginx-logs-volume
+              mountPath: /var/log/nginx
+              readOnly: false
+            - name: nginx-conf-volume
+              mountPath: /etc/nginx/conf.d
+              readOnly: false
+      volumes:
+        - name: nginx-config-volume
+          hostPath:
+            path: /noluck/nginx/nginx.conf
+            type: File
+        - name: nginx-cert-volume
+          hostPath:
+            path: /noluck/nginx/cert.crt
+            type: File
+        - name: nginx-key-volume
+          hostPath:
+            path: /noluck/nginx/cert.key
+            type: File
+        - name: nginx-logs-volume
+          hostPath:
+            path: /noluck/nginx/logs
+            type: Directory
+        - name: nginx-conf-volume
+          hostPath:
+            path: /noluck/nginx/conf.d
+            type: Directory
+      imagePullSecrets:  # Corrected section
+        - name: gcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+spec:
+  selector:
+    app: nginx
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 443
+  type: NodePort
+  # You can adjust the type based on your requirements (e.g., NodePort, ClusterIP)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: filebeat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: filebeat
+  template:
+    metadata:
+      labels:
+        app: filebeat
+    spec:
+      containers:
+        - name: filebeat
+          image: docker.elastic.co/beats/filebeat:${ELASTIC_TAG}
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: docker-sock-volume
+              mountPath: /var/run/docker.sock
+              readOnly: true
+            - name: docker-containers-volume
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: filebeat-config-volume
+              mountPath: /usr/share/filebeat/filebeat.yml
+              readOnly: true
+            - name: rabbitmq-logs-volume
+              mountPath: /var/log/rabbitmq
+              readOnly: true
+      volumes:
+        - name: docker-sock-volume
+          hostPath:
+            path: /var/run/docker.sock
+            type: Socket
+        - name: docker-containers-volume
+          hostPath:
+            path: /var/lib/docker/containers
+            type: Directory
+        - name: filebeat-config-volume
+          hostPath:
+            path: /noluck/filebeat/filebeat.yml
+            type: File
+        - name: rabbitmq-logs-volume
+          hostPath:
+            path: /noluck/rabbit-mq/logs
+            type: Directory
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rabbit-mq
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rabbit-mq
+  template:
+    metadata:
+      labels:
+        app: rabbit-mq
+    spec:
+      containers:
+      - name: rabbit-mq
+        image: rabbitmq:3.11-management-alpine
+        ports:
+        - containerPort: 5672
+        - containerPort: 8883
+        - containerPort: 15672
+        - containerPort: 1883
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/rabbitmq
+        - name: logs
+          mountPath: /var/log/rabbitmq
+        - name: config
+          mountPath: /etc/rabbitmq/rabbitmq.conf
+        env:
+        - name: RABBITMQ_LOG_BASE
+          value: "/var/log/rabbitmq"
+        - name: RABBITMQ_LOGS
+          value: "/var/log/rabbitmq/rabbitmq.log"
+
+      volumes:
+      - name: data
+        hostPath:
+          path: /noluck/rabbit-mq/data
+          type: Directory
+      - name: logs
+        hostPath:
+          path: /noluck/rabbit-mq/logs
+          type: Directory
+      - name: config
+        hostPath:
+          path: /noluck/rabbit-mq/rabbitmq.conf
+          type: File
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rabbit-mq
+spec:
+  selector:
+    app: rabbit-mq
+  ports:
+  - name: amqp
+    port: 5672
+    targetPort: 5672
+  - name: tls-amqp
+    port: 8883
+    targetPort: 8883
+  - name: management
+    port: 15672
+    targetPort: 15672
+  - name: mqtt
+    port: 1883
+    targetPort: 1883
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kibana
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kibana
+  template:
+    metadata:
+      labels:
+        app: kibana
+    spec:
+      containers:
+        - name: kibana
+          image: docker.elastic.co/kibana/kibana:${ELASTIC_TAG}
+          volumeMounts:
+            - name: config-volume
+              mountPath: /usr/share/kibana/config/kibana.yml
+              readOnly: true
+            - name: healthcheck-script-volume
+              mountPath: /healthcheck.sh
+              readOnly: true
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - /healthcheck.sh
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+      volumes:
+        - name: config-volume
+          hostPath:
+            path: /noluck/kibana/kibana.yml
+            type: File
+        - name: healthcheck-script-volume
+          hostPath:
+            path: /noluck/kibana/healthcheck.sh
+            type: File
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana
+spec:
+  selector:
+    app: kibana
+  ports:
+    - name: http
+      protocol: TCP
+      port: 5601
+      targetPort: 5601
+  type: ClusterIP
+  # You can adjust the type based on your requirements (e.g., NodePort, LoadBalancer)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elasticsearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: elasticsearch
+  template:
+    metadata:
+      labels:
+        app: elasticsearch
+    spec:
+      containers:
+        - name: elasticsearch
+          image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_TAG}
+          env:
+            - name: cluster.name
+              value: docker-cluster
+            - name: bootstrap.memory_lock
+              value: "true"
+          resources:
+            limits:
+              memory: 4Gi
+              cpu: 2
+          volumeMounts:
+          - name: config-volume
+            mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+            readOnly: true
+          - name: jvm-options-volume
+            mountPath: /usr/share/elasticsearch/config/jvm.options
+            readOnly: true
+          - name: data-volume
+            mountPath: /usr/share/elasticsearch/data
+            readOnly: false
+          - name: logs-volume
+            mountPath: /usr/share/elasticsearch/logs
+            readOnly: false
+      volumes:
+      - name: config-volume
+        hostPath:
+          path: /noluck/elasticsearch/elasticsearch.yml
+          type: File
+      - name: jvm-options-volume
+        hostPath:
+          path: /noluck/elasticsearch/jvm.options
+          type: File
+      - name: data-volume
+        hostPath:
+          path: /noluck/elasticsearch/data
+          type: Directory
+      - name: logs-volume
+        hostPath:
+          path: /noluck/elasticsearch/logs
+          type: Directory
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+spec:
+  selector:
+    app: elasticsearch
+  ports:
+    - name: http
+      protocol: TCP
+      port: 9200
+      targetPort: 9200
+    - name: transport
+      protocol: TCP
+      port: 9300
+      targetPort: 9300
+  type: ClusterIP
+  # You can adjust the type based on your requirements (e.g., NodePort, LoadBalancer)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:12.0-alpine
+          securityContext:
+            runAsUser: 70
+            runAsGroup: 70
+          ports:
+            - containerPort: 5432
+          env:
+                  #- name: PGDATA
+                  #   value: /var/lib/postgresql/data
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pg-credentials
+                  key: pg_user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pg-credentials
+                  key: pg_pass
+            - name: REPLICATION_MODE
+              value: master
+            - name: REPLICATION_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pg-credentials
+                  key: pg_user
+            - name: REPLICATION_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: pg-credentials
+                  key: pg_pass
+            - name: REPLICATION_SSLMODE
+              value: ""
+            - name: POSTGRES_INITDB_ARGS
+              value: "--lc-collate=default --locale=default --lc-ctype=default"
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U nolucksec
+            initialDelaySeconds: 15
+            periodSeconds: 25
+          volumeMounts:
+            - name: postgres-conf
+              mountPath: /etc/postgresql/postgresql.conf
+            - name: postgres-hba
+              mountPath: /etc/postgresql/pg_hba.conf
+            - name: audit-failed-login
+              mountPath: /etc/postgresql/auditfailedlogin.sql
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: archive-dir
+              mountPath: /var/lib/postgresql/12/main/archivedir
+            - name: db-backup
+              mountPath: /etc/postgresql/db_backup.sh
+      volumes:
+        - name: postgres-conf
+          hostPath:
+            path: /noluck/postgres/postgres.conf
+            type: File
+        - name: postgres-hba
+          hostPath:
+            path: /noluck/postgres/pg_hba.conf
+            type: File
+        - name: audit-failed-login
+          hostPath:
+            path: /noluck/postgres/auditfailedlogin.sql
+            type: File
+        - name: postgres-data
+          hostPath:
+            path: /noluck/postgres/data
+            type: Directory
+        - name: archive-dir
+          hostPath:
+            path: /noluck/postgres/archivedir
+            type: Directory
+        - name: db-backup
+          hostPath:
+            path: /noluck/postgres/db_backup.sh
+            type: File
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      protocol: TCP
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: netdata
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: netdata
+  template:
+    metadata:
+      labels:
+        app: netdata
+    spec:
+      containers:
+      - name: netdata
+        image: gcr.io/macro-kiln-247514/netdata:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          capabilities:
+            add:
+            - SYS_PTRACE
+        volumeMounts:
+        - mountPath: /host/proc
+          name: proc-volume
+          readOnly: true
+        - mountPath: /host/sys
+          name: sys-volume
+          readOnly: true
+        - mountPath: /var/log/netdata
+          name: log-volume
+        - mountPath: /etc/netdata/netdata.conf
+          name: config-volume
+        - mountPath: /etc/netdata/python.d
+          name: python-plugins-volume
+        env:
+        - name: PGID
+          value: "999"
+      volumes:
+      - name: proc-volume
+        hostPath:
+          path: /proc
+          type: Directory
+      - name: sys-volume
+        hostPath:
+          path: /sys
+          type: Directory
+      - name: log-volume
+        hostPath:
+          path: /noluck/netdata/logs
+          type: Directory
+      - name: config-volume
+        hostPath:
+          path: /noluck/netdata/netdata.conf
+          type: File
+      - name: python-plugins-volume
+        hostPath:
+          path: /noluck/netdata/plugins
+          type: Directory
+      imagePullSecrets:  # Corrected section
+        - name: gcr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: netdata
+spec:
+  selector:
+    app: netdata
+  ports:
+    - name: netdata
+      protocol: TCP
+      port: 19999
+      targetPort: 19999
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: netdata-log-claim
+spec:
+  storageClassName: ""
+  volumeName: netdata-logs-pv
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  selector:
+    matchLabels:
+      pv-name: netdata-logs-pv
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:5.0.6-alpine
+          volumeMounts:
+            - name: redis-data-volume
+              mountPath: /data
+            - name: redis-config-volume
+              mountPath: /etc/redis/
+              #subPath: redis.conf
+              readOnly: true
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 2000
+            allowPrivilegeEscalation: false
+          ports:
+            - containerPort: 6379
+          command: ["redis-server", "/etc/redis/redis.conf"]
+      volumes:
+        - name: redis-data-volume
+          hostPath:
+            path: /noluck/redis/data
+        - name: redis-config-volume
+          hostPath:
+            path: /noluck/redis/
+            type: Directory
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+spec:
+  selector:
+    app: redis
+  ports:
+    - name: redis
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+  # You can adjust the type based on your requirements (e.g., NodePort, ClusterIP)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-commander
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-commander
+  template:
+    metadata:
+      labels:
+        app: redis-commander
+    spec:
+      containers:
+        - name: redis-commander
+          image: rediscommander/redis-commander:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: REDIS_HOSTS
+              value: "db00:redis:6379:0:nolucksec"
+          ports:
+            - containerPort: 8081
+      # Add any additional configuration as needed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-commander
+spec:
+  selector:
+    app: redis-commander
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8081
+      targetPort: 8081
+  # You can adjust the type based on your requirements (e.g., NodePort, ClusterIP)
+---
+
